@@ -784,6 +784,7 @@ static int clk_core_round_rate_nolock(struct clk_core *core,
 {
 	struct clk_core *parent;
 	long rate;
+	const struct coord_rate_domain *crd;
 
 	lockdep_assert_held(&prepare_lock);
 
@@ -799,7 +800,14 @@ static int clk_core_round_rate_nolock(struct clk_core *core,
 		req->best_parent_rate = 0;
 	}
 
-	if (core->ops->determine_rate) {
+	crd = core->hw->cr_domain;
+	if (crd) {
+		int rate_idx;
+		struct coord_rate_entry **tbl = crd->table;
+
+		rate_idx = core->ops->select_coord_rates(core->hw, req->rate);
+		req->rate = tbl[core->hw->cr_clk_index][rate_idx].rate;
+	} else if (core->ops->determine_rate) {
 		return core->ops->determine_rate(core->hw, req);
 	} else if (core->ops->round_rate) {
 		rate = core->ops->round_rate(core->hw, req->rate,
