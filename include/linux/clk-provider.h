@@ -70,6 +70,7 @@ struct coord_rate_domain {
 	int nr_clks;
 	int nr_rates;
 	struct coord_rate_entry **table;
+	void *priv;
 };
 
 /**
